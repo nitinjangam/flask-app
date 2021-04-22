@@ -1,10 +1,14 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python'
+        }
+    }
 
     stages {
         stage('Build') {
             steps {
-                sh 'python app.py'
+                sh 'python -m app.py'
                 echo 'Building'
             }
         }
