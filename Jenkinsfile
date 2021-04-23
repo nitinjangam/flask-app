@@ -1,44 +1,24 @@
-pipeline {
-    agent {
-        docker {
-            image 'python'
+node {
+    def app
+    
+    stage('clone repository') {
+        checkout scm
+    }
+    
+    stage('build image') {
+        app = docker.build("nitinjangam/flask-app")
+    }
+    
+    stage('test image') {
+        app.inside {
+            sh 'echo "tests passed"'
         }
     }
-
-    stages {
-        stage('Build') {
-            steps {
-                sh 'python -m app.py'
-                echo 'Building'
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying'
-            }
-        }
-    }
-    post {
-        always {
-            echo 'This will always run'
-        }
-        success {
-            echo 'This will run only if successful'
-        }
-        failure {
-            echo 'This will run only if failed'
-        }
-        unstable {
-            echo 'This will run only if the run was marked as unstable'
-        }
-        changed {
-            echo 'This will run only if the state of the Pipeline has changed'
-            echo 'For example, if the Pipeline was previously failing but is now successful'
+    
+    stage('push image') {
+        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+            app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
         }
     }
 }
